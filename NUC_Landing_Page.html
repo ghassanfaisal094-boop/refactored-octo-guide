@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NUC Store Operation System — Gaza Systems</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:   #040D1E;
+  --deep:   #071428;
+  --mid:    #0A1F3C;
+  --panel:  #0D2548;
+  --card:   #0F2D55;
+  --cyan:   #00C8F0;
+  --gold:   #F0A800;
+  --green:  #00E599;
+  --red:    #FF4D6D;
+  --white:  #FFFFFF;
+  --muted:  #7A9BB8;
+  --light:  #B8D4E8;
+  --border: rgba(0,200,240,0.15);
+  --glow:   0 0 40px rgba(0,200,240,0.12);
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--navy);
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ── NOISE TEXTURE OVERLAY ──────────────────────── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:.4;
+}
+
+/* ── GRID BACKGROUND ────────────────────────────── */
+.grid-bg{
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(0,200,240,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,240,.04) 1px, transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;
+}
+
+/* ── NAV ────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:20px 60px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(4,13,30,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;
+  letter-spacing:.5px;
+  color:var(--white);
+}
+.nav-logo span{color:var(--cyan)}
+.nav-links{display:flex;gap:36px;list-style:none}
+.nav-links a{
+  color:var(--muted);font-size:14px;font-weight:500;
+  text-decoration:none;letter-spacing:.3px;
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--cyan)}
+.nav-cta{
+  background:var(--cyan);color:var(--navy);
+  padding:10px 24px;border-radius:6px;
+  font-size:14px;font-weight:600;
+  text-decoration:none;letter-spacing:.3px;
+  transition:all .2s;
+}
+.nav-cta:hover{background:#00E0FF;transform:translateY(-1px)}
+
+/* ── HERO ───────────────────────────────────────── */
+#hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding:120px 60px 80px;
+  overflow:hidden;
+}
+.hero-glow{
+  position:absolute;
+  top:-200px;right:-200px;
+  width:700px;height:700px;
+  background:radial-gradient(circle, rgba(0,200,240,.12) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-glow-2{
+  position:absolute;
+  bottom:-300px;left:-100px;
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(0,229,153,.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-content{position:relative;z-index:1;max-width:680px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,200,240,.1);
+  border:1px solid rgba(0,200,240,.3);
+  color:var(--cyan);
+  padding:6px 16px;border-radius:100px;
+  font-size:12px;font-weight:500;letter-spacing:.5px;
+  margin-bottom:28px;
+}
+.hero-badge::before{
+  content:'';width:6px;height:6px;
+  background:var(--green);border-radius:50%;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(42px,6vw,76px);
+  font-weight:800;
+  line-height:1.05;
+  letter-spacing:-1px;
+  margin-bottom:24px;
+}
+h1 .accent{color:var(--cyan)}
+h1 .gold{color:var(--gold)}
+.hero-sub{
+  font-size:18px;color:var(--light);
+  line-height:1.7;margin-bottom:40px;
+  font-weight:300;max-width:540px;
+}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap}
+.btn-primary{
+  background:var(--cyan);color:var(--navy);
+  padding:14px 32px;border-radius:8px;
+  font-size:15px;font-weight:600;
+  text-decoration:none;letter-spacing:.2px;
+  transition:all .25s;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary:hover{background:#00E0FF;transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,200,240,.3)}
+.btn-secondary{
+  background:transparent;color:var(--white);
+  border:1px solid rgba(255,255,255,.2);
+  padding:14px 32px;border-radius:8px;
+  font-size:15px;font-weight:500;
+  text-decoration:none;letter-spacing:.2px;
+  transition:all .25s;
+}
+.btn-secondary:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* ── HERO STATS ─────────────────────────────────── */
+.hero-stats{
+  display:flex;gap:40px;margin-top:56px;
+  padding-top:40px;
+  border-top:1px solid var(--border);
+}
+.stat-item{}
+.stat-num{
+  font-family:'Syne',sans-serif;
+  font-size:32px;font-weight:800;color:var(--cyan);
+  line-height:1;
+}
+.stat-label{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.3px}
+
+/* ── HERO VISUAL ────────────────────────────────── */
+.hero-visual{
+  position:absolute;right:0;top:50%;
+  transform:translateY(-50%);
+  width:48%;
+  opacity:.9;
+}
+.mockup-window{
+  background:var(--mid);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 40px 120px rgba(0,0,0,.6), var(--glow);
+  margin:0 60px;
+}
+.mockup-bar{
+  background:var(--panel);
+  padding:14px 20px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border);
+}
+.dot{width:10px;height:10px;border-radius:50%}
+.mockup-title{
+  font-size:12px;color:var(--muted);
+  margin-left:8px;letter-spacing:.3px;font-weight:500;
+}
+.mockup-body{padding:24px}
+.mockup-row{
+  display:flex;gap:12px;margin-bottom:12px;
+}
+.mockup-card{
+  flex:1;background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;padding:16px;
+}
+.mockup-card-label{font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:.3px}
+.mockup-card-val{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:700;
+}
+.mockup-table{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;
+}
+.mockup-th{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  padding:10px 14px;
+  background:rgba(0,200,240,.06);
+  border-bottom:1px solid var(--border);
+}
+.mockup-td{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  padding:9px 14px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:11px;
+}
+.th-cell{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.3px}
+.status{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:600;letter-spacing:.3px;
+}
+.s-green{background:rgba(0,229,153,.15);color:var(--green)}
+.s-gold{background:rgba(240,168,0,.15);color:var(--gold)}
+.s-red{background:rgba(255,77,109,.15);color:var(--red)}
+
+/* ── SECTIONS SHARED ────────────────────────────── */
+section{position:relative;padding:100px 60px}
+.section-label{
+  font-size:11px;font-weight:600;letter-spacing:2px;
+  color:var(--cyan);text-transform:uppercase;
+  margin-bottom:12px;
+}
+h2{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(32px,4vw,52px);
+  font-weight:800;line-height:1.1;
+  margin-bottom:16px;letter-spacing:-.5px;
+}
+.section-sub{
+  font-size:17px;color:var(--muted);
+  max-width:560px;line-height:1.7;
+  font-weight:300;margin-bottom:60px;
+}
+
+/* ── FEATURES ───────────────────────────────────── */
+#features{background:var(--deep)}
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:2px;
+  background:var(--border);
+  border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.feat-card{
+  background:var(--deep);
+  padding:36px 32px;
+  transition:background .2s;
+  position:relative;overflow:hidden;
+}
+.feat-card::after{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--feat-color,var(--cyan));
+  opacity:0;transition:opacity .2s;
+}
+.feat-card:hover{background:var(--mid)}
+.feat-card:hover::after{opacity:1}
+.feat-icon{
+  width:44px;height:44px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:20px;
+}
+.feat-title{
+  font-family:'Syne',sans-serif;
+  font-size:17px;font-weight:700;
+  margin-bottom:10px;color:var(--white);
+}
+.feat-desc{font-size:14px;color:var(--muted);line-height:1.65}
+
+/* ── SECURITY ───────────────────────────────────── */
+#security{
+  background:var(--navy);
+  overflow:hidden;
+}
+.security-layout{
+  display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;
+}
+.security-diagram{
+  position:relative;
+  background:var(--mid);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:40px;
+  overflow:hidden;
+}
+.sec-glow{
+  position:absolute;top:-100px;right:-100px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(0,200,240,.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+.fingerprint-items{display:flex;flex-direction:column;gap:16px}
+.fp-item{
+  display:flex;align-items:center;gap:16px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:16px 20px;
+  position:relative;overflow:hidden;
+}
+.fp-item::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--fp-color,var(--cyan));
+}
+.fp-icon{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.fp-label{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px}
+.fp-val{font-size:11px;color:var(--muted);font-family:monospace;letter-spacing:.5px}
+
+.combine-arrow{
+  text-align:center;padding:12px 0;
+  color:var(--muted);font-size:12px;letter-spacing:.5px;
+}
+.hash-result{
+  background:rgba(0,229,153,.08);
+  border:1px solid rgba(0,229,153,.25);
+  border-radius:10px;padding:16px 20px;
+  display:flex;align-items:center;gap:16px;
+}
+.hash-label{font-size:12px;font-weight:600;color:var(--green);letter-spacing:.3px}
+.hash-val{font-size:11px;color:rgba(0,229,153,.7);font-family:monospace;margin-top:2px;word-break:break-all}
+
+.security-points{display:flex;flex-direction:column;gap:24px}
+.sec-point{display:flex;gap:16px}
+.sec-point-icon{
+  width:40px;height:40px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  background:rgba(0,200,240,.1);
+}
+.sec-point-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
+.sec-point-desc{font-size:14px;color:var(--muted);line-height:1.6}
+
+/* ── HOW IT WORKS ───────────────────────────────── */
+#how{background:var(--deep)}
+.steps-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  background:var(--border);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.step-card{
+  background:var(--deep);padding:40px 28px;
+  position:relative;
+}
+.step-num{
+  font-family:'Syne',sans-serif;
+  font-size:64px;font-weight:800;
+  line-height:1;color:rgba(0,200,240,.08);
+  margin-bottom:16px;letter-spacing:-2px;
+}
+.step-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:20px;
+  background:rgba(0,200,240,.1);
+}
+.step-title{
+  font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:700;margin-bottom:10px;
+}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.65}
+
+/* ── PRICING ────────────────────────────────────── */
+#pricing{background:var(--navy);overflow:hidden}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:24px;align-items:start;
+}
+.price-card{
+  background:var(--mid);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:40px 32px;
+  position:relative;transition:transform .2s,box-shadow .2s;
+}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.price-card.featured{
+  background:var(--panel);
+  border-color:var(--cyan);
+  box-shadow:0 0 60px rgba(0,200,240,.12);
+}
+.price-badge{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  background:var(--cyan);color:var(--navy);
+  padding:4px 16px;border-radius:100px;
+  font-size:11px;font-weight:700;letter-spacing:.5px;
+  white-space:nowrap;
+}
+.price-tier{
+  font-size:12px;font-weight:600;letter-spacing:1.5px;
+  color:var(--muted);text-transform:uppercase;margin-bottom:8px;
+}
+.price-name{
+  font-family:'Syne',sans-serif;
+  font-size:26px;font-weight:800;margin-bottom:4px;
+}
+.price-devices{font-size:14px;color:var(--muted);margin-bottom:28px}
+.price-features{list-style:none;margin-bottom:36px}
+.price-features li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:14px;color:var(--light);
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.price-features li::before{
+  content:'✓';color:var(--green);
+  font-weight:700;font-size:13px;flex-shrink:0;margin-top:1px;
+}
+.price-btn{
+  width:100%;padding:14px;border-radius:8px;
+  font-size:14px;font-weight:600;letter-spacing:.2px;
+  cursor:pointer;border:none;
+  transition:all .2s;text-align:center;display:block;
+  text-decoration:none;
+}
+.price-btn-outline{
+  background:transparent;color:var(--white);
+  border:1px solid rgba(255,255,255,.2);
+}
+.price-btn-outline:hover{border-color:var(--cyan);color:var(--cyan)}
+.price-btn-filled{background:var(--cyan);color:var(--navy)}
+.price-btn-filled:hover{background:#00E0FF}
+
+/* ── TRACKING DASHBOARD SECTION ─────────────────── */
+#tracking{background:var(--deep)}
+.tracking-layout{
+  display:grid;grid-template-columns:1fr 1.2fr;gap:80px;align-items:center;
+}
+.dashboard-mockup{
+  background:var(--mid);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+.dash-header{
+  background:var(--panel);padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.dash-title-bar{display:flex;align-items:center;gap:8px}
+.dash-badge{
+  font-size:10px;padding:2px 8px;border-radius:4px;
+  background:rgba(0,229,153,.15);color:var(--green);
+  font-weight:600;letter-spacing:.3px;
+}
+.dash-body{padding:20px}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.dash-stat{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:8px;padding:12px;
+}
+.ds-label{font-size:9px;color:var(--muted);letter-spacing:.5px;font-weight:500;margin-bottom:4px}
+.ds-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.dash-log{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.log-header{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr;
+  padding:8px 12px;background:rgba(0,200,240,.06);
+  border-bottom:1px solid var(--border);
+}
+.log-th{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.log-row{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr;
+  padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:10px;color:var(--light);align-items:center;
+}
+.log-row:last-child{border-bottom:none}
+
+/* ── CTA ────────────────────────────────────────── */
+#cta{
+  background:var(--navy);
+  text-align:center;padding:120px 60px;
+  position:relative;overflow:hidden;
+}
+.cta-glow{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(0,200,240,.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+#cta h2{color:var(--white)}
+#cta .section-sub{margin:0 auto 40px;text-align:center}
+
+/* ── FOOTER ─────────────────────────────────────── */
+footer{
+  background:var(--deep);
+  border-top:1px solid var(--border);
+  padding:40px 60px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-logo{
+  font-family:'Syne',sans-serif;
+  font-size:18px;font-weight:800;color:var(--white);
+}
+.footer-logo span{color:var(--cyan)}
+.footer-copy{font-size:13px;color:var(--muted)}
+
+/* ── ANIMATIONS ─────────────────────────────────── */
+.fade-up{
+  opacity:0;transform:translateY(30px);
+  animation:fadeUp .7s ease forwards;
+}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.1s}
+.delay-2{animation-delay:.2s}
+.delay-3{animation-delay:.3s}
+.delay-4{animation-delay:.4s}
+
+/* scan line on security diagram */
+@keyframes scan{
+  0%{top:0;opacity:.6}
+  100%{top:100%;opacity:0}
+}
+.scan-line{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:scan 3s linear infinite;
+  pointer-events:none;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:1100px){
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-visual{display:none}
+  .security-layout,.tracking-layout{grid-template-columns:1fr}
+  .steps-grid{grid-template-columns:repeat(2,1fr)}
+  .pricing-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  nav{padding:16px 24px}
+  .nav-links{display:none}
+  section{padding:70px 24px}
+  #hero{padding:100px 24px 60px}
+  .features-grid{grid-template-columns:1fr}
+  .steps-grid{grid-template-columns:1fr}
+  .hero-stats{flex-wrap:wrap;gap:24px}
+  footer{flex-direction:column;gap:16px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">NUC<span>.</span>sys</div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#security">Security</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#tracking">Tracking</a></li>
+  </ul>
+  <a href="#cta" class="nav-cta">Get Licensed</a>
+</nav>
+
+<!-- ── HERO ───────────────────────────────────── -->
+<section id="hero">
+  <div class="grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero-content">
+    <div class="hero-badge fade-up">Live &amp; Deployed — Gaza Systems 2025</div>
+    <h1 class="fade-up delay-1">
+      Retail Operations.<br>
+      <span class="accent">Hardware Secured.</span><br>
+      <span class="gold">Fully Tracked.</span>
+    </h1>
+    <p class="hero-sub fade-up delay-2">
+      NUC Store Operation System is a complete retail management platform — transactions, inventory, maintenance, and invoicing — locked to a single licensed device with real-time vendor tracking.
+    </p>
+    <div class="hero-actions fade-up delay-3">
+      <a href="#cta" class="btn-primary">Request License ↗</a>
+      <a href="#features" class="btn-secondary">Explore Features</a>
+    </div>
+    <div class="hero-stats fade-up delay-4">
+      <div class="stat-item">
+        <div class="stat-num">100+</div>
+        <div class="stat-label">DEPLOYABLE DEVICES</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3×</div>
+        <div class="stat-label">HARDWARE IDENTIFIERS</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">0</div>
+        <div class="stat-label">MONTHLY FEES</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">TRACKING HISTORY</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Mockup -->
+  <div class="hero-visual fade-up delay-2">
+    <div class="mockup-window">
+      <div class="mockup-bar">
+        <div class="dot" style="background:#FF5F56"></div>
+        <div class="dot" style="background:#FFBD2E"></div>
+        <div class="dot" style="background:#27C93F"></div>
+        <span class="mockup-title">NUC Store Operation — Daily Operations</span>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-row">
+          <div class="mockup-card">
+            <div class="mockup-card-label">TODAY'S SALES</div>
+            <div class="mockup-card-val" style="color:#00C8F0">EGP 18,450</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-label">TRANSACTIONS</div>
+            <div class="mockup-card-val" style="color:#00E599">34</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-label">PENDING JOBS</div>
+            <div class="mockup-card-val" style="color:#F0A800">7</div>
+          </div>
+        </div>
+        <div class="mockup-table">
+          <div class="mockup-th">
+            <span class="th-cell">INVOICE</span>
+            <span class="th-cell">CLIENT</span>
+            <span class="th-cell">AMOUNT</span>
+            <span class="th-cell">STATUS</span>
+          </div>
+          <div class="mockup-td">
+            <span>INV-20251</span><span>Ahmed Store</span>
+            <span style="color:#00C8F0">3,200</span>
+            <span><span class="status s-green">PAID</span></span>
+          </div>
+          <div class="mockup-td">
+            <span>INV-20252</span><span>Cairo Tech</span>
+            <span style="color:#00C8F0">7,800</span>
+            <span><span class="status s-gold">PENDING</span></span>
+          </div>
+          <div class="mockup-td">
+            <span>INV-20253</span><span>MegaMart</span>
+            <span style="color:#00C8F0">1,450</span>
+            <span><span class="status s-green">PAID</span></span>
+          </div>
+          <div class="mockup-td">
+            <span>RET-20254</span><span>Delta Shop</span>
+            <span style="color:#FF4D6D">-580</span>
+            <span><span class="status s-red">RETURN</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ────────────────────────────────── -->
+<section id="features">
+  <div class="grid-bg"></div>
+  <div class="section-label">What's Inside</div>
+  <h2>Everything your store needs.<br><span style="color:var(--cyan)">Nothing it doesn't.</span></h2>
+  <p class="section-sub">Six integrated modules covering every operational dimension of retail — from first sale to last report.</p>
+
+  <div class="features-grid">
+    <div class="feat-card" style="--feat-color:var(--cyan)">
+      <div class="feat-icon" style="background:rgba(0,200,240,.1)">🧾</div>
+      <div class="feat-title">Transaction Engine</div>
+      <div class="feat-desc">Customer invoicing, purchase orders, return processing, store expenses, operation expenses, internal transfers, and financial transactions — all in one unified workspace.</div>
+    </div>
+    <div class="feat-card" style="--feat-color:var(--green)">
+      <div class="feat-icon" style="background:rgba(0,229,153,.1)">📦</div>
+      <div class="feat-title">Stock & Inventory</div>
+      <div class="feat-desc">Real-time quantity tracking per product, brand, and category. Auto availability status, sold-out detection, part code and serial tracking, and price management.</div>
+    </div>
+    <div class="feat-card" style="--feat-color:var(--gold)">
+      <div class="feat-icon" style="background:rgba(240,168,0,.1)">🔧</div>
+      <div class="feat-title">Maintenance Management</div>
+      <div class="feat-desc">Job ticket creation, device intake, technician assignment, parts and labor costing, repair status tracking, warranty recording, and delivery confirmation.</div>
+    </div>
+    <div class="feat-card" style="--feat-color:var(--red)">
+      <div class="feat-icon" style="background:rgba(255,77,109,.1)">🔒</div>
+      <div class="feat-title">NUC Security Engine</div>
+      <div class="feat-desc">Hardware fingerprint licensing using MAC address, BIOS UUID, and Volume Serial. Workbook dies instantly on any unauthorized device. Remote kill switch always active.</div>
+    </div>
+    <div class="feat-card" style="--feat-color:var(--cyan)">
+      <div class="feat-icon" style="background:rgba(0,200,240,.1)">📊</div>
+      <div class="feat-title">Invoices Tracker</div>
+      <div class="feat-desc">Complete invoice history with filtering, status tracking, payment records, and daily operation summary. Full audit trail for every transaction across all categories.</div>
+    </div>
+    <div class="feat-card" style="--feat-color:var(--green)">
+      <div class="feat-icon" style="background:rgba(0,229,153,.1)">📡</div>
+      <div class="feat-title">Vendor Tracking Dashboard</div>
+      <div class="feat-desc">Every open from every client device logged in real time to your Google Sheet. Timestamps, MAC addresses, PC names — complete activity history across your entire deployment.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECURITY ─────────────────────────────────── -->
+<section id="security">
+  <div class="grid-bg"></div>
+  <div class="security-layout">
+    <div>
+      <div class="section-label">NUC Security Engine</div>
+      <h2>Three locks.<br><span style="color:var(--cyan)">One device.</span><br>Zero exceptions.</h2>
+      <p class="section-sub" style="margin-bottom:36px">Copy the file to a new machine — it dies. Change the hardware — it dies. Vendor marks revoked — it dies on next open. This is not VBA password protection. This is device-level binding.</p>
+      <div class="security-points">
+        <div class="sec-point">
+          <div class="sec-point-icon">🛡️</div>
+          <div>
+            <div class="sec-point-title">Instant Violation Detection</div>
+            <div class="sec-point-desc">When a mismatch is detected, the workbook locks all sheets, hides all tabs, disables every button and keyboard shortcut, and sends you an email alert — all before the user sees anything.</div>
+          </div>
+        </div>
+        <div class="sec-point">
+          <div class="sec-point-icon">📡</div>
+          <div>
+            <div class="sec-point-title">Remote Kill Switch</div>
+            <div class="sec-point-desc">Change one cell in your Google Sheet to REVOKED. Next time the client opens the file — disabled. No physical access required. Works from anywhere.</div>
+          </div>
+        </div>
+        <div class="sec-point">
+          <div class="sec-point-icon">🔄</div>
+          <div>
+            <div class="sec-point-title">Device Transfer Support</div>
+            <div class="sec-point-desc">When clients reinstall Windows or change hardware, you run VendorTransfer, enter new device data, re-send the file. Clean process, full audit trail, no license wasted.</div>
+          </div>
+        </div>
+        <div class="sec-point">
+          <div class="sec-point-icon">📶</div>
+          <div>
+            <div class="sec-point-title">Offline Grace Period</div>
+            <div class="sec-point-desc">3-day offline tolerance backed by local fingerprint verification. Clients in low-connectivity environments keep working — but the server gets updated the moment they reconnect.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="security-diagram">
+      <div class="scan-line"></div>
+      <div class="sec-glow"></div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;color:var(--cyan);margin-bottom:20px;text-transform:uppercase">Device Fingerprint Composition</div>
+      <div class="fingerprint-items">
+        <div class="fp-item" style="--fp-color:var(--cyan)">
+          <div class="fp-icon" style="background:rgba(0,200,240,.1)">🌐</div>
+          <div>
+            <div class="fp-label">MAC Address</div>
+            <div class="fp-val">00-1A-2B-3C-4D-5E</div>
+          </div>
+        </div>
+        <div class="fp-item" style="--fp-color:var(--gold)">
+          <div class="fp-icon" style="background:rgba(240,168,0,.1)">💾</div>
+          <div>
+            <div class="fp-label">BIOS UUID</div>
+            <div class="fp-val">4C4C4544-0041-4810-8035-C3C04F525931</div>
+          </div>
+        </div>
+        <div class="fp-item" style="--fp-color:var(--green)">
+          <div class="fp-icon" style="background:rgba(0,229,153,.1)">💿</div>
+          <div>
+            <div class="fp-label">Volume Serial (C:)</div>
+            <div class="fp-val">F76C-1A2B</div>
+          </div>
+        </div>
+        <div class="combine-arrow">↓ combined &amp; hashed ↓</div>
+        <div class="hash-result">
+          <div>
+            <div class="hash-label">DEVICE ID (HASH)</div>
+            <div class="hash-val">3F7A1C9D — verified on every open</div>
+          </div>
+          <span style="margin-left:auto;font-size:20px">✅</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ──────────────────────────────── -->
+<section id="how">
+  <div class="grid-bg"></div>
+  <div class="section-label">Setup Process</div>
+  <h2>From purchase to <span style="color:var(--cyan)">production</span><br>in 4 steps.</h2>
+  <p class="section-sub">No installation. No IT team. No server infrastructure on the client side. Just a file that knows exactly which machine it belongs to.</p>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon">📋</div>
+      <div class="step-title">Client Sends Device Data</div>
+      <div class="step-desc">Client opens the workbook. The system reads PC Name, MAC address, and Device ID automatically — copies everything to clipboard. Client pastes and sends to vendor.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon">⚙️</div>
+      <div class="step-title">Vendor Pre-Registers</div>
+      <div class="step-desc">Vendor runs VendorPreRegister on their copy. Enters client data. System registers the device on the Google server and embeds credentials directly into the workbook file.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon">📤</div>
+      <div class="step-title">Configured File Sent</div>
+      <div class="step-desc">Vendor saves the now-configured workbook and sends it to the client. When client opens it, the security check passes automatically — no activation step needed.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-icon">📡</div>
+      <div class="step-title">Live &amp; Tracked</div>
+      <div class="step-desc">Every open logs to the vendor's master Google Sheet in real time. Timestamps, device names, MAC addresses. Remote kill switch always active from the vendor dashboard.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRACKING DASHBOARD ───────────────────────── -->
+<section id="tracking">
+  <div class="grid-bg"></div>
+  <div class="tracking-layout">
+    <div>
+      <div class="section-label">Vendor Dashboard</div>
+      <h2>Every device.<br><span style="color:var(--cyan)">Real time.</span><br>Your Google Sheet.</h2>
+      <p class="section-sub" style="margin-bottom:36px">You don't need a server, a backend, or a dashboard app. Your tracking master sheet is a live Google Sheet you own — with color-coded activity, automatic violation alerts, and full device history.</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:14px">
+        <li style="display:flex;align-items:center;gap:12px;font-size:15px;color:var(--light)">
+          <span style="color:var(--green);font-size:18px">✓</span> Every open logged with timestamp and device fingerprint
+        </li>
+        <li style="display:flex;align-items:center;gap:12px;font-size:15px;color:var(--light)">
+          <span style="color:var(--green);font-size:18px">✓</span> Violations flagged red instantly — email alert sent to you
+        </li>
+        <li style="display:flex;align-items:center;gap:12px;font-size:15px;color:var(--light)">
+          <span style="color:var(--green);font-size:18px">✓</span> Change Status to REVOKED — client disabled on next open
+        </li>
+        <li style="display:flex;align-items:center;gap:12px;font-size:15px;color:var(--light)">
+          <span style="color:var(--green);font-size:18px">✓</span> LastSeen column updates automatically on every open
+        </li>
+        <li style="display:flex;align-items:center;gap:12px;font-size:15px;color:var(--light)">
+          <span style="color:var(--green);font-size:18px">✓</span> Zero infrastructure cost — runs on Google free tier
+        </li>
+      </ul>
+    </div>
+
+    <div class="dashboard-mockup">
+      <div class="dash-header">
+        <div class="dash-title-bar">
+          <span style="font-size:13px;font-weight:600;color:var(--white)">NUC Security Master</span>
+          <span class="dash-badge">LIVE</span>
+        </div>
+        <span style="font-size:11px;color:var(--muted)">ActivityLog · Devices</span>
+      </div>
+      <div class="dash-body">
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <div class="ds-label">ACTIVE DEVICES</div>
+            <div class="ds-val" style="color:var(--green)">12</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-label">OPENS TODAY</div>
+            <div class="ds-val" style="color:var(--cyan)">28</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-label">VIOLATIONS</div>
+            <div class="ds-val" style="color:var(--red)">1</div>
+          </div>
+        </div>
+        <div class="dash-log">
+          <div class="log-header">
+            <span class="log-th">Timestamp</span>
+            <span class="log-th">Event</span>
+            <span class="log-th">License</span>
+            <span class="log-th">Status</span>
+          </div>
+          <div class="log-row">
+            <span>2025-05-27 09:14</span>
+            <span style="color:var(--green)">OPEN_OK</span>
+            <span>NUC-2025-KXMB4</span>
+            <span><span class="status s-green">OK</span></span>
+          </div>
+          <div class="log-row">
+            <span>2025-05-27 09:08</span>
+            <span style="color:var(--green)">OPEN_OK</span>
+            <span>NUC-2025-R7TQP</span>
+            <span><span class="status s-green">OK</span></span>
+          </div>
+          <div class="log-row">
+            <span>2025-05-27 08:55</span>
+            <span style="color:var(--red)">VIOLATION</span>
+            <span>NUC-2025-ABCD1</span>
+            <span><span class="status s-red">BLOCKED</span></span>
+          </div>
+          <div class="log-row">
+            <span>2025-05-27 08:41</span>
+            <span style="color:var(--green)">OPEN_OK</span>
+            <span>NUC-2025-XY991</span>
+            <span><span class="status s-green">OK</span></span>
+          </div>
+          <div class="log-row">
+            <span>2025-05-27 08:30</span>
+            <span style="color:var(--cyan)">PREREGISTER</span>
+            <span>NUC-2025-NEW01</span>
+            <span><span class="status s-gold">NEW</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ─────────────────────────────────── -->
+<section id="pricing">
+  <div class="grid-bg"></div>
+  <div class="section-label">Licensing Tiers</div>
+  <h2>One-time license.<br><span style="color:var(--cyan)">No monthly fees.</span></h2>
+  <p class="section-sub">Every tier includes the full system. Pricing scales with how many devices you need licensed.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Starter</div>
+      <div class="price-name">Single Device</div>
+      <div class="price-devices">1 licensed hardware installation</div>
+      <ul class="price-features">
+        <li>All core modules</li>
+        <li>NUC Security lock</li>
+        <li>Google Sheet tracking</li>
+        <li>Email support</li>
+        <li>6 months free updates</li>
+      </ul>
+      <a href="#cta" class="price-btn price-btn-outline">Contact Vendor</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge">MOST POPULAR</div>
+      <div class="price-tier">Professional</div>
+      <div class="price-name">Up to 3 Devices</div>
+      <div class="price-devices">3 licensed hardware installations</div>
+      <ul class="price-features">
+        <li>All modules + reporting</li>
+        <li>NUC Security + remote kill</li>
+        <li>Full tracking dashboard</li>
+        <li>Priority support</li>
+        <li>Device transfer on request</li>
+        <li>1 year free updates</li>
+      </ul>
+      <a href="#cta" class="price-btn price-btn-filled">Contact Vendor</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-tier">Enterprise</div>
+      <div class="price-name">Unlimited Devices</div>
+      <div class="price-devices">Unlimited within your organization</div>
+      <ul class="price-features">
+        <li>All modules + custom branding</li>
+        <li>Full NUC Security suite</li>
+        <li>Dedicated support line</li>
+        <li>On-site setup included</li>
+        <li>Lifetime updates</li>
+      </ul>
+      <a href="#cta" class="price-btn price-btn-outline">Contact Vendor</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ────────────────────────────────────── -->
+<section id="cta">
+  <div class="grid-bg"></div>
+  <div class="cta-glow"></div>
+  <div style="position:relative;z-index:1">
+    <div class="section-label" style="text-align:center;margin-bottom:16px">Ready to Deploy</div>
+    <h2 style="text-align:center;margin-bottom:16px">
+      Get your store<br>
+      <span style="color:var(--cyan)">running today.</span>
+    </h2>
+    <p class="section-sub" style="text-align:center">
+      Send your device information and we'll register, configure, and deliver your licensed copy — ready to open on day one.
+    </p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <a href="mailto:your@email.com" class="btn-primary">Request Your License ↗</a>
+      <a href="#features" class="btn-secondary">View Features</a>
+    </div>
+    <div style="margin-top:48px;display:flex;justify-content:center;gap:48px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--cyan)">No</div>
+        <div style="font-size:12px;color:var(--muted);letter-spacing:.3px">MONTHLY FEES</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green)">No</div>
+        <div style="font-size:12px;color:var(--muted);letter-spacing:.3px">INSTALLATION NEEDED</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--gold)">No</div>
+        <div style="font-size:12px;color:var(--muted);letter-spacing:.3px">SERVER REQUIRED</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--red)">Zero</div>
+        <div style="font-size:12px;color:var(--muted);letter-spacing:.3px">UNAUTHORIZED COPIES</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────── -->
+<footer>
+  <div class="footer-logo">NUC<span>.</span>sys</div>
+  <div class="footer-copy">© 2025 Gaza Systems · NUC Store Operation System · All Rights Reserved</div>
+  <div style="font-size:13px;color:var(--muted)">Built & Secured by Gaza Systems</div>
+</footer>
+
+<script>
+// Intersection Observer for scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.feat-card,.step-card,.price-card,.sec-point,.fp-item').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity .5s ease, transform .5s ease';
+  observer.observe(el);
+});
+
+// Stagger grid children
+document.querySelectorAll('.features-grid,.steps-grid,.pricing-grid').forEach(grid => {
+  [...grid.children].forEach((child, i) => {
+    child.style.transitionDelay = `${i * 0.08}s`;
+  });
+});
+</script>
+</body>
+</html>
